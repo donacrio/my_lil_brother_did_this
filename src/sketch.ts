@@ -2,6 +2,7 @@ import { Point } from '@flatten-js/core';
 import p5 from 'p5';
 import { DelaunayTriangulation } from './delaunay';
 import { samplePoissonDisk } from './poissonDisk';
+import { drawPencil } from './draw';
 
 const ASPECT_RATIO = 1.414;
 
@@ -45,17 +46,12 @@ export const sketch = (p: p5) => {
     p.background(240);
 
     p.stroke(50, 50, 200, 50);
-    p.strokeWeight(4);
+    p.strokeWeight(1);
     p.noFill();
 
-    // Draw the generated paths
-    p.beginShape();
     for (const path of paths) {
-      for (const vertex of path) {
-        p.vertex(vertex.x, vertex.y);
-      }
+      drawPencil(p, path, { width: 2, density: 10 });
     }
-    p.endShape();
   };
 
   p.windowResized = () => {
