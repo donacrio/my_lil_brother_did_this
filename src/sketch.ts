@@ -1,8 +1,9 @@
 import { Point } from '@flatten-js/core';
 import p5 from 'p5';
-import { DelaunayTriangulation } from './delaunay';
-import { samplePoissonDisk } from './poissonDisk';
-import { drawPencil } from './draw';
+import { DelaunayTriangulation } from './graph/delaunay';
+import { drawPencil } from './draw/pencil';
+import { randomTraverse } from './graph/graph';
+import { poissonDiskSampler } from './sample/point';
 
 const ASPECT_RATIO = 1.414;
 
@@ -22,40 +23,56 @@ export const sketch = (p: p5) => {
 
   let points: Point[] = [];
   let delaunayTriangulation: DelaunayTriangulation;
-  let paths: Point[][] = [];
+  const paths: Point[][] = [];
 
   p.setup = () => {
     p.createCanvas(width, height);
 
-    // Generate points using Poisson Disk Sampling
-    points = samplePoissonDisk({
-      width,
-      height,
-      minDistanceBetweenPoints: 10,
-      maxDistanceBetweenPoints: 20,
+    points = poissonDiskSampler(width, height, {
+      minDistanceBetweenPoints: 25,
+      maxDistanceBetweenPoints: 50,
       numberOfTries: 100,
     });
 
     delaunayTriangulation = new DelaunayTriangulation(points);
-    paths = [delaunayTriangulation.randomTraverse(points[0])];
-    console.log(paths);
+
+    // Pass canvas dimensions to createPaths
+    const nPaths = 100;
+
+    for (let i = 0; i < nPaths; i++) {
+      paths.push(
+        randomTraverse(
+          delaunayTriangulation,
+          points[i],
+          {
+            xMin: 0,
+            xMax: width,
+            yMin: 0,
+            yMax: height,
+          },
+          {
+            maxLength: 100,
+          }
+        )
+      );
+    }
+
     p.noLoop();
   };
 
   p.draw = () => {
     p.background(240);
 
-    p.stroke(50, 50, 200, 50);
-    p.strokeWeight(1);
-    p.noFill();
+    p.stroke(40); // Charcoal gray
+    p.strokeWeight(1); // Small dots for pencil effect
 
     for (const path of paths) {
-      drawPencil(p, path, { width: 2, density: 10 });
+      drawPencil(p, path, { width: 4, density: 1 });
     }
   };
 
   p.windowResized = () => {
-    const { width, height } = calculateCanvasSize(p);
-    p.resizeCanvas(width, height);
+    const { width: newWidth, height: newHeight } = calculateCanvasSize(p);
+    p.resizeCanvas(newWidth, newHeight);
   };
 };
