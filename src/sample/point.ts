@@ -1,19 +1,16 @@
 import { Point } from '@flatten-js/core';
 import PoissonDiskSampling from 'poisson-disk-sampling';
 
-export const samplePoissonDisk = ({
-  width,
-  height,
-  minDistanceBetweenPoints,
-  maxDistanceBetweenPoints,
-  numberOfTries,
-}: {
-  width: number;
-  height: number;
+export interface PointSampler<O> {
+  (width: number, height: number, options: O): Point[];
+}
+
+export const poissonDiskSampler: PointSampler<{
   minDistanceBetweenPoints: number;
   maxDistanceBetweenPoints: number;
   numberOfTries: number;
-}): Point[] => {
+}> = (width, height, options) => {
+  const { minDistanceBetweenPoints, maxDistanceBetweenPoints, numberOfTries } = options;
   const sampler = new PoissonDiskSampling({
     shape: [width, height],
     minDistance: minDistanceBetweenPoints,
