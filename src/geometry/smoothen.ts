@@ -7,14 +7,8 @@ const pointToVector = (p: Point): Vector => new Vector(p.x, p.y);
 const vectorToPoint = (v: Vector): Point => new Point(v.x, v.y);
 
 /**
- * Calculates a point on a Catmull-Rom spline segment.
+ * Calculates a point on a Catmull-Rom spline segment using the standard formula.
  * The segment is defined between p1 and p2, using p0 and p3 as control points.
- * @param p0 Control point before the segment start
- * @param p1 Start point of the segment
- * @param p2 End point of the segment
- * @param p3 Control point after the segment end
- * @param t Parameter value (0 to 1)
- * @returns The interpolated Vector
  */
 const catmullRomInterpolate = (
   p0: Vector,
@@ -40,38 +34,33 @@ const catmullRomInterpolate = (
  * Smooths an open path defined by an array of points using Catmull-Rom splines.
  *
  * @param points The array of Point objects defining the path.
- * @param numPointsPerSegment The number of points to generate for each segment of the spline. Higher values result in a smoother curve. Defaults to 10.
+ * @param pointsPerSegment The number of points to generate for each segment of the spline. Higher values result in a smoother curve. Defaults to 10.
  * @returns A new array of Point objects representing the smoothed path.
  */
-export const smoothPathCatmullRom = (
-  points: Point[],
-  numPointsPerSegment: number = 10
-): Point[] => {
+export const smoothPathCatmullRom = (points: Point[], pointsPerSegment: number = 10): Point[] => {
   if (points.length < 2) {
+    console.warn('smoothPathCatmullRom requires at least 2 points.');
     return [...points]; // Return original points if not enough to form a segment
   }
 
   const resultPoints: Point[] = [];
-  // Create a padded array to handle boundary conditions by duplicating endpoints
-  const inputPoints = [points[0], ...points, points[points.length - 1]];
+  const paddedPoints = [points[0], ...points, points[points.length - 1]];
 
-  // Add the very first point of the original path
   resultPoints.push(points[0]);
 
   // Iterate through the segments of the original path
   for (let i = 0; i < points.length - 1; i++) {
     // Define the four points for the Catmull-Rom calculation for the segment between points[i] and points[i+1]
     // Indices reference the padded inputPoints array
-    const p0 = pointToVector(inputPoints[i]); // Control point before start (points[i-1] or points[0])
-    const p1 = pointToVector(inputPoints[i + 1]); // Start point of segment (points[i])
-    const p2 = pointToVector(inputPoints[i + 2]); // End point of segment (points[i+1])
-    const p3 = pointToVector(inputPoints[i + 3]); // Control point after end (points[i+2] or points[n-1])
+    const p0 = pointToVector(paddedPoints[i]); // Control point before start (points[i-1] or points[0])
+    const p1 = pointToVector(paddedPoints[i + 1]); // Start point of segment (points[i])
+    const p2 = pointToVector(paddedPoints[i + 2]); // End point of segment (points[i+1])
+    const p3 = pointToVector(paddedPoints[i + 3]); // Control point after end (points[i+2] or points[n-1])
 
-    // Generate intermediate points for the current segment
     // Start j=1 because t=0 corresponds to p1 (points[i]), which is added either
     // as the first point overall or as the end point (t=1) of the previous segment.
-    for (let j = 1; j <= numPointsPerSegment; j++) {
-      const t = j / numPointsPerSegment;
+    for (let j = 1; j <= pointsPerSegment; j++) {
+      const t = j / pointsPerSegment;
       const interpolatedVector = catmullRomInterpolate(p0, p1, p2, p3, t);
       resultPoints.push(vectorToPoint(interpolatedVector));
     }
@@ -85,47 +74,40 @@ export const smoothPathCatmullRom = (
  * Treats the path as looping, connecting the last point back to the first smoothly.
  *
  * @param points The array of Point objects defining the closed path. Should not include a duplicate of the start point at the end.
- * @param numPointsPerSegment The number of points to generate for each segment of the spline. Higher values result in a smoother curve. Defaults to 10.
+ * @param pointsPerSegment The number of points to generate for each segment of the spline. Higher values result in a smoother curve. Defaults to 10.
  * @returns A new array of Point objects representing the smoothed closed path.
  */
 export const smoothClosedPathCatmullRom = (
   points: Point[],
-  numPointsPerSegment: number = 10
+  pointsPerSegment: number = 10
 ): Point[] => {
   const n = points.length;
   if (n < 3) {
-    // Cannot form a closed loop spline with less than 3 points.
-    // Returning the original points, consider logging a warning or throwing an error.
     console.warn('smoothClosedPathCatmullRom requires at least 3 points.');
     return [...points];
   }
 
   const resultPoints: Point[] = [];
 
-  // Iterate through each point in the original path, treating it as the start of a segment (p1)
   for (let i = 0; i < n; i++) {
-    // Use modulo arithmetic to wrap around the indices for a closed loop
-    const p0_idx = (i - 1 + n) % n; // Point before the start
-    const p1_idx = i; // Start point of the segment
-    const p2_idx = (i + 1) % n; // End point of the segment
-    const p3_idx = (i + 2) % n; // Point after the end
+    const p0Index = (i - 1 + n) % n;
+    const p1Index = i;
+    const p2Index = (i + 1) % n;
+    const p3Index = (i + 2) % n;
 
-    // Get the actual points as vectors
-    const p0 = pointToVector(points[p0_idx]);
-    const p1 = pointToVector(points[p1_idx]);
-    const p2 = pointToVector(points[p2_idx]);
-    const p3 = pointToVector(points[p3_idx]);
+    const p0 = pointToVector(points[p0Index]);
+    const p1 = pointToVector(points[p1Index]);
+    const p2 = pointToVector(points[p2Index]);
+    const p3 = pointToVector(points[p3Index]);
 
-    // Add the starting point (p1) only for the very first segment (i=0)
-    // Subsequent segment starts are implicitly added as the end point (t=1) of the previous segment.
     if (i === 0) {
       resultPoints.push(vectorToPoint(p1));
     }
 
     // Generate intermediate points for the current segment (from p1 to p2)
     // Start j=1 because t=0 corresponds to p1.
-    for (let j = 1; j <= numPointsPerSegment; j++) {
-      const t = j / numPointsPerSegment;
+    for (let j = 1; j <= pointsPerSegment; j++) {
+      const t = j / pointsPerSegment;
       const interpolatedVector = catmullRomInterpolate(p0, p1, p2, p3, t);
       resultPoints.push(vectorToPoint(interpolatedVector));
     }

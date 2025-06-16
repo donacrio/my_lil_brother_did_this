@@ -5,7 +5,7 @@ export interface Graph {
   getNeighbors(index: Point): Point[];
 }
 
-const isWithinBounds = (
+const isOutOfBounds = (
   point: Point,
   bounds: { xMin: number; xMax: number; yMin: number; yMax: number }
 ): boolean => {
@@ -17,12 +17,12 @@ const isWithinBounds = (
   );
 };
 
-const chooseNextPointProbabilistically = (
+const chooseNextPointByDirection = (
   currentPoint: Point,
   previousPoint: Point,
   validNeighbors: Point[]
 ): Point | null => {
-  const directionVec = new Vector(
+  const currentDirection = new Vector(
     currentPoint.x - previousPoint.x,
     currentPoint.y - previousPoint.y
   ).normalize();
@@ -31,12 +31,12 @@ const chooseNextPointProbabilistically = (
   const weightedNeighbors: Point[] = [];
 
   for (const neighbor of validNeighbors) {
-    const toNeighborVec = new Vector(
+    const neighborDirection = new Vector(
       neighbor.x - currentPoint.x,
       neighbor.y - currentPoint.y
     ).normalize();
-    const dotProduct = directionVec.dot(toNeighborVec);
-    const weight = Math.pow(dotProduct + 1, 2);
+    const alignment = currentDirection.dot(neighborDirection);
+    const weight = Math.pow(alignment + 1, 2);
     const finalWeight = Math.max(weight, 0.01);
 
     weightedNeighbors.push(neighbor);
@@ -67,21 +67,21 @@ export const randomTraverse = (
     visitedPoints.add(currentPoint);
 
     const neighbors = graph.getNeighbors(currentPoint);
-    const validNeighbors = neighbors.filter((neighbor) => !visitedPoints.has(neighbor));
+    const unvisitedNeighbors = neighbors.filter((neighbor) => !visitedPoints.has(neighbor));
 
-    if (validNeighbors.length === 0) {
+    if (unvisitedNeighbors.length === 0) {
       break;
     }
 
     let nextPoint = null;
 
     if (path.length < 2 || previousPoint === null) {
-      nextPoint = randomChoice(validNeighbors);
+      nextPoint = randomChoice(unvisitedNeighbors);
     } else {
-      nextPoint = chooseNextPointProbabilistically(currentPoint, previousPoint, validNeighbors);
+      nextPoint = chooseNextPointByDirection(currentPoint, previousPoint, unvisitedNeighbors);
     }
 
-    if (nextPoint !== null && isWithinBounds(nextPoint, bounds)) {
+    if (nextPoint !== null && isOutOfBounds(nextPoint, bounds)) {
       nextPoint = null;
     }
 

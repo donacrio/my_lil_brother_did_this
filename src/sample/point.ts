@@ -5,17 +5,13 @@ export interface PointSampler<O> {
   (width: number, height: number, options: O): Point[];
 }
 
-type PoissonDiskSamplerOptions = {
+type PoissonDiskOptions = {
   minDistanceBetweenPoints: number;
   maxDistanceBetweenPoints: number;
   numberOfTries: number;
 };
 
-export const poissonDiskSampler: PointSampler<PoissonDiskSamplerOptions> = (
-  width,
-  height,
-  options
-) => {
+export const poissonDiskSampler: PointSampler<PoissonDiskOptions> = (width, height, options) => {
   const { minDistanceBetweenPoints, maxDistanceBetweenPoints, numberOfTries } = options;
   const sampler = new PoissonDiskSampling({
     shape: [width, height],

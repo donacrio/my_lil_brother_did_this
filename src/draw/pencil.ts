@@ -9,21 +9,20 @@ const drawPencilSegment = (
   density: number
 ) => {
   const segment = p5.Vector.sub(endPoint, startPoint);
-  const segmentLen = segment.mag();
+  const segmentLength = segment.mag();
 
-  if (segmentLen === 0) return; // Skip zero-length segments
+  if (segmentLength === 0) return;
 
-  const numberOfDots = Math.ceil(segmentLen * density);
+  const numberOfDots = Math.ceil(segmentLength * density);
   const direction = segment.copy().normalize();
   const perpendicular = p5Instance.createVector(-direction.y, direction.x);
 
   for (let j = 0; j < numberOfDots; j++) {
-    const distanceAlongSegment = p5Instance.random(segmentLen);
+    const distanceAlongSegment = p5Instance.random(segmentLength);
     const pointOnSegment = p5.Vector.add(startPoint, direction.copy().mult(distanceAlongSegment));
     const offsetMagnitude = p5Instance.randomGaussian(0, width / 2);
     const offset = perpendicular.copy().mult(offsetMagnitude);
 
-    // Calculate final dot position
     const dotPosition = p5.Vector.add(pointOnSegment, offset);
 
     p5Instance.point(dotPosition.x, dotPosition.y);
@@ -46,11 +45,11 @@ export const drawPencil = (
     const next = p5Instance.createVector(points[i + 1].x, points[i + 1].y);
     drawPencilSegment(p5Instance, current, next, width, density);
   }
-  drawPencilSegment(
-    p5Instance,
-    p5Instance.createVector(points[points.length - 1].x, points[points.length - 1].y),
-    p5Instance.createVector(points[0].x, points[0].y),
-    width,
-    density
+
+  const lastPoint = p5Instance.createVector(
+    points[points.length - 1].x,
+    points[points.length - 1].y
   );
+  const firstPoint = p5Instance.createVector(points[0].x, points[0].y);
+  drawPencilSegment(p5Instance, lastPoint, firstPoint, width, density);
 };
