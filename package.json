@@ -16,11 +16,13 @@
   },
   "dependencies": {
     "@flatten-js/core": "^1.6.2",
+    "concaveman": "^1.2.1",
     "d3": "^7.9.0",
     "p5": "^2.0.1",
     "poisson-disk-sampling": "^2.3.1"
   },
   "devDependencies": {
+    "@types/concaveman": "^1.1.6",
     "@types/d3": "^7.4.3",
     "@types/p5": "^1.7.6",
     "@types/poisson-disk-sampling": "^2.2.4",

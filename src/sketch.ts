@@ -1,9 +1,9 @@
-import { Point } from '@flatten-js/core';
+import { Point, Polygon } from '@flatten-js/core';
 import p5 from 'p5';
-import { DelaunayTriangulation } from './graph/delaunay';
 import { drawPencil } from './draw/pencil';
-import { randomTraverse } from './graph/graph';
-import { poissonDiskSampler } from './sample/point';
+import { randomPoints } from './sample/point';
+import { concaveHull } from './geometry/concave';
+import { smoothClosedPathCatmullRom } from './geometry/smoothen';
 
 const ASPECT_RATIO = 1.414;
 
@@ -22,40 +22,16 @@ export const sketch = (p: p5) => {
   const { width, height } = calculateCanvasSize(p);
 
   let points: Point[] = [];
-  let delaunayTriangulation: DelaunayTriangulation;
-  const paths: Point[][] = [];
+  let hull: Polygon;
+  let smoothedHull: Point[] = [];
 
   p.setup = () => {
     p.createCanvas(width, height);
 
-    points = poissonDiskSampler(width, height, {
-      minDistanceBetweenPoints: 25,
-      maxDistanceBetweenPoints: 50,
-      numberOfTries: 100,
-    });
-
-    delaunayTriangulation = new DelaunayTriangulation(points);
-
-    // Pass canvas dimensions to createPaths
-    const nPaths = 100;
-
-    for (let i = 0; i < nPaths; i++) {
-      paths.push(
-        randomTraverse(
-          delaunayTriangulation,
-          points[i],
-          {
-            xMin: 0,
-            xMax: width,
-            yMin: 0,
-            yMax: height,
-          },
-          {
-            maxLength: 100,
-          }
-        )
-      );
-    }
+    const nPoints = 10;
+    points = randomPoints(width, height, { numberOfPoints: nPoints });
+    hull = concaveHull(points, 0.5, 100);
+    smoothedHull = smoothClosedPathCatmullRom(hull.vertices, 10);
 
     p.noLoop();
   };
@@ -63,12 +39,11 @@ export const sketch = (p: p5) => {
   p.draw = () => {
     p.background(240);
 
-    p.stroke(40); // Charcoal gray
-    p.strokeWeight(1); // Small dots for pencil effect
+    // Draw hull
+    p.stroke(0);
+    p.noFill();
 
-    for (const path of paths) {
-      drawPencil(p, path, { width: 4, density: 1 });
-    }
+    drawPencil(p, smoothedHull, { width: 1, density: 5 });
   };
 
   p.windowResized = () => {

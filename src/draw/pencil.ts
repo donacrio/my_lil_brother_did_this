@@ -46,4 +46,11 @@ export const drawPencil = (
     const next = p5Instance.createVector(points[i + 1].x, points[i + 1].y);
     drawPencilSegment(p5Instance, current, next, width, density);
   }
+  drawPencilSegment(
+    p5Instance,
+    p5Instance.createVector(points[points.length - 1].x, points[points.length - 1].y),
+    p5Instance.createVector(points[0].x, points[0].y),
+    width,
+    density
+  );
 };
