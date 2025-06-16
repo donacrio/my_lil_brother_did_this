@@ -4,6 +4,7 @@ import { drawPencil } from './draw/pencil';
 import { randomPoints } from './sample/point';
 import { concaveHull } from './geometry/concave';
 import { smoothClosedPathCatmullRom } from './geometry/smoothen';
+import { createTexture, drawPaper } from './draw/paper';
 
 const ASPECT_RATIO = 1.414;
 
@@ -21,17 +22,22 @@ const calculateCanvasSize = (p: p5): { width: number; height: number } => {
 export const sketch = (p: p5) => {
   const { width, height } = calculateCanvasSize(p);
 
-  let points: Point[] = [];
-  let hull: Polygon;
-  let smoothedHull: Point[] = [];
+  let pencilDraw: Point[] = [];
+  let paperDraw: Polygon;
+
+  let paperTexture: p5.Graphics;
 
   p.setup = () => {
     p.createCanvas(width, height);
 
     const nPoints = 10;
-    points = randomPoints(width, height, { numberOfPoints: nPoints });
-    hull = concaveHull(points, 0.5, 100);
-    smoothedHull = smoothClosedPathCatmullRom(hull.vertices, 10);
+    const points = randomPoints(width, height, { numberOfPoints: nPoints });
+    const hull = concaveHull(points, 0.5, 100);
+    pencilDraw = smoothClosedPathCatmullRom(hull.vertices, 10);
+
+    const pointsPaper = randomPoints(width, height, { numberOfPoints: 4 });
+    paperDraw = concaveHull(pointsPaper, 0.5, 100);
+    paperTexture = createTexture(p, width, height);
 
     p.noLoop();
   };
@@ -43,7 +49,9 @@ export const sketch = (p: p5) => {
     p.stroke(0);
     p.noFill();
 
-    drawPencil(p, smoothedHull, { width: 1, density: 5 });
+    drawPaper(p, paperDraw, paperTexture);
+
+    drawPencil(p, pencilDraw, { width: 2, density: 3 });
   };
 
   p.windowResized = () => {
