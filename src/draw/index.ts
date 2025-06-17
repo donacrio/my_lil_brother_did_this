@@ -1,2 +1,2 @@
 export { drawPencil } from './pencil';
-export { drawPaper } from './paper';
+export { drawTexturedShape } from './texturedShape';

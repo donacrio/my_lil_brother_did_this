@@ -13,8 +13,8 @@ export const drawPencil = (
   }
 
   for (let i = 0; i < points.length - 1; i++) {
-    const current = p5Instance.createVector(points[i].x, points[i].y);
-    const next = p5Instance.createVector(points[i + 1].x, points[i + 1].y);
+    const current = p5Instance.createVector(points[i]!.x, points[i]!.y);
+    const next = p5Instance.createVector(points[i + 1]!.x, points[i + 1]!.y);
     _drawPencilSegment(p5Instance, current, next, width, density);
   }
 };

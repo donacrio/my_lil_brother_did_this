@@ -8,7 +8,7 @@ export const closePath = (points: Point[]): Point[] => {
     return points;
   }
 
-  return [...points, points[0]];
+  return [...points, points[0]!];
 };
 
 export const toPolygon = (points: Point[]): Polygon => {
@@ -33,16 +33,16 @@ export const smoothenOpenPathCatmullRom = (
   const resultPoints: Point[] = [];
   const paddedPoints = [points[0], ...points, points[points.length - 1]];
 
-  resultPoints.push(points[0]);
+  resultPoints.push(points[0]!);
 
   // Iterate through the segments of the original path
   for (let i = 0; i < points.length - 1; i++) {
     // Define the four points for the Catmull-Rom calculation for the segment between points[i] and points[i+1]
     // Indices reference the padded inputPoints array
-    const p0 = _pointToVector(paddedPoints[i]); // Control point before start (points[i-1] or points[0])
-    const p1 = _pointToVector(paddedPoints[i + 1]); // Start point of segment (points[i])
-    const p2 = _pointToVector(paddedPoints[i + 2]); // End point of segment (points[i+1])
-    const p3 = _pointToVector(paddedPoints[i + 3]); // Control point after end (points[i+2] or points[n-1])
+    const p0 = _pointToVector(paddedPoints[i]!); // Control point before start (points[i-1] or points[0])
+    const p1 = _pointToVector(paddedPoints[i + 1]!); // Start point of segment (points[i])
+    const p2 = _pointToVector(paddedPoints[i + 2]!); // End point of segment (points[i+1])
+    const p3 = _pointToVector(paddedPoints[i + 3]!); // Control point after end (points[i+2] or points[n-1])
 
     // Start j=1 because t=0 corresponds to p1 (points[i]), which is added either
     // as the first point overall or as the end point (t=1) of the previous segment.
@@ -75,7 +75,7 @@ export const smoothenClosedPathCatmullRom = (
   // Create an extended path that handles the wraparound for closed path smoothing
   // For a closed path [A, B, C, D], we create [D, A, B, C, D, A]
   // This provides proper control points for all segments including the wraparound
-  const extendedPath = [points[points.length - 1], ...points, points[0]];
+  const extendedPath = [points[points.length - 1]!, ...points, points[0]!];
 
   const smoothedExtended = smoothenOpenPathCatmullRom(extendedPath, pointsPerSegment);
 
