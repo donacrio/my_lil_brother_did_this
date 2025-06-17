@@ -3,9 +3,10 @@ import p5 from 'p5';
 import { drawTexturedShape } from './draw/texturedShape';
 import { RandomPointSampler } from './sample/point';
 import { ConcaveHullPathSampler } from './sample/path';
-import { closePath, smoothenOpenPathCatmullRom, toPolygon } from './utils/path';
+import { closePath, smoothenClosedPathCatmullRom, toPolygon } from './utils/path';
 import { DotsTexture } from './texture';
-import type { Paper } from './paper';
+import { tearPaper, TearPattern, type Paper } from './paper';
+import { drawPencil } from './draw';
 
 const ASPECT_RATIO = 1.414;
 
@@ -24,7 +25,8 @@ export const sketch = (p: p5) => {
   const { width, height } = calculateCanvasSize(p);
 
   let paper: Paper;
-  const texture = DotsTexture;
+  const paperTexture = DotsTexture;
+  let papers: Paper[] = [];
 
   p.setup = () => {
     p.createCanvas(width, height);
@@ -39,11 +41,13 @@ export const sketch = (p: p5) => {
       }
     );
 
+    const box = new Box(width / 4, height / 4, (width * 3) / 4, (height * 3) / 4);
+    const path = smoothenClosedPathCatmullRom(closePath(pathSampler.sample(box)));
     paper = {
-      shape: toPolygon(
-        smoothenOpenPathCatmullRom(closePath(pathSampler.sample(new Box(0, 0, width, height))))
-      ),
+      shape: toPolygon(path),
     };
+
+    papers = tearPaper(paper, TearPattern.RANDOM, 6, 0);
 
     p.noLoop();
   };
@@ -53,12 +57,11 @@ export const sketch = (p: p5) => {
     p.stroke(0);
     p.noFill();
 
-    drawTexturedShape(
-      p,
-      paper.shape,
-      texture.getTexture(p, paper.shape.box.width, paper.shape.box.height)
-    );
-    // drawPencil(p, path, { width: 2, density: 5 });
+    papers.forEach((paper) => {
+      drawTexturedShape(p, paper.shape, paperTexture.getTexture(p, width, height));
+    });
+
+    drawPencil(p, paper.shape.vertices, { width: 2, density: 5 });
   };
 
   p.windowResized = () => {
