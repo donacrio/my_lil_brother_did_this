@@ -4,7 +4,7 @@ import { drawTexturedShape } from './draw/texturedShape';
 import { RandomPointSampler } from './sample/point';
 import { ConcaveHullPathSampler } from './sample/path';
 import { closePath, smoothenOpenPathCatmullRom, toPolygon } from './utils/path';
-import { getTexture, TextureType } from './texture';
+import { DotsTexture } from './texture';
 import type { Paper } from './paper';
 
 const ASPECT_RATIO = 1.414;
@@ -24,7 +24,7 @@ export const sketch = (p: p5) => {
   const { width, height } = calculateCanvasSize(p);
 
   let paper: Paper;
-  let texture: p5.Graphics;
+  const texture = DotsTexture;
 
   p.setup = () => {
     p.createCanvas(width, height);
@@ -45,13 +45,6 @@ export const sketch = (p: p5) => {
       ),
     };
 
-    texture = getTexture(
-      p,
-      TextureType.GEOMETRIC_LINES,
-      paper.shape.box.width,
-      paper.shape.box.height
-    );
-
     p.noLoop();
   };
 
@@ -60,7 +53,11 @@ export const sketch = (p: p5) => {
     p.stroke(0);
     p.noFill();
 
-    drawTexturedShape(p, paper.shape, texture);
+    drawTexturedShape(
+      p,
+      paper.shape,
+      texture.getTexture(p, paper.shape.box.width, paper.shape.box.height)
+    );
     // drawPencil(p, path, { width: 2, density: 5 });
   };
 
