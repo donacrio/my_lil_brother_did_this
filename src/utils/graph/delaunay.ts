@@ -1,6 +1,6 @@
 import { Point } from '@flatten-js/core';
 import * as d3 from 'd3';
-import { Graph } from './graph';
+import type { Graph } from '.';
 
 export class DelaunayTriangulation implements Graph {
   public readonly points: Point[];
@@ -13,6 +13,6 @@ export class DelaunayTriangulation implements Graph {
 
   public getNeighbors(point: Point): Point[] {
     const index = this.points.findIndex((p) => p === point);
-    return Array.from(this.delaunay.neighbors(index)).map((i) => this.points[i]);
+    return Array.from(this.delaunay.neighbors(index)).map((i) => this.points[i]!);
   }
 }

@@ -1,7 +1,25 @@
 import { Point } from '@flatten-js/core';
 import p5 from 'p5';
 
-const drawPencilSegment = (
+export const drawPencil = (
+  p5Instance: p5,
+  points: Point[],
+  options: { width: number; density: number }
+) => {
+  const { width, density } = options;
+
+  if (points.length < 2) {
+    return; // Need at least two points to form a line
+  }
+
+  for (let i = 0; i < points.length - 1; i++) {
+    const current = p5Instance.createVector(points[i].x, points[i].y);
+    const next = p5Instance.createVector(points[i + 1].x, points[i + 1].y);
+    _drawPencilSegment(p5Instance, current, next, width, density);
+  }
+};
+
+const _drawPencilSegment = (
   p5Instance: p5,
   startPoint: p5.Vector,
   endPoint: p5.Vector,
@@ -27,29 +45,4 @@ const drawPencilSegment = (
 
     p5Instance.point(dotPosition.x, dotPosition.y);
   }
-};
-
-export const drawPencil = (
-  p5Instance: p5,
-  points: Point[],
-  options: { width: number; density: number }
-) => {
-  const { width, density } = options;
-
-  if (points.length < 2) {
-    return; // Need at least two points to form a line
-  }
-
-  for (let i = 0; i < points.length - 1; i++) {
-    const current = p5Instance.createVector(points[i].x, points[i].y);
-    const next = p5Instance.createVector(points[i + 1].x, points[i + 1].y);
-    drawPencilSegment(p5Instance, current, next, width, density);
-  }
-
-  const lastPoint = p5Instance.createVector(
-    points[points.length - 1].x,
-    points[points.length - 1].y
-  );
-  const firstPoint = p5Instance.createVector(points[0].x, points[0].y);
-  drawPencilSegment(p5Instance, lastPoint, firstPoint, width, density);
 };

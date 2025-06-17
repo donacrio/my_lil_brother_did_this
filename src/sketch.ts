@@ -1,10 +1,9 @@
-import { Point, Polygon } from '@flatten-js/core';
+import { Box, Point } from '@flatten-js/core';
 import p5 from 'p5';
-import { drawPencil } from './draw/pencil';
-import { randomPoints } from './sample/point';
-import { concaveHull } from './geometry/concave';
-import { smoothClosedPathCatmullRom } from './geometry/smoothen';
-import { drawPaper } from './draw/paper';
+import { drawPaper } from './draw';
+import { RandomPointSampler } from './sample/point';
+import { ConcaveHullPathSampler } from './sample/path';
+import { closePath, smoothenOpenPathCatmullRom, toPolygon } from './utils/path';
 import { TextureType } from './texture';
 
 const ASPECT_RATIO = 1.414;
@@ -23,18 +22,24 @@ const calculateCanvasSize = (p: p5): { width: number; height: number } => {
 export const sketch = (p: p5) => {
   const { width, height } = calculateCanvasSize(p);
 
-  let pencilPath: Point[] = [];
-  let paperShape: Polygon;
+  let path: Point[];
 
   p.setup = () => {
     p.createCanvas(width, height);
 
-    const pencilPoints = randomPoints(width, height, { numberOfPoints: 10 });
-    const pencilHull = concaveHull(pencilPoints, 0.5, 100);
-    pencilPath = smoothClosedPathCatmullRom(pencilHull.vertices, 10);
+    const pathSampler = new ConcaveHullPathSampler(
+      new RandomPointSampler({
+        numberOfPoints: 1000,
+      }),
+      {
+        concavity: 0.5,
+        lengthThreshold: 75,
+      }
+    );
 
-    const paperPoints = randomPoints(width, height, { numberOfPoints: 4 });
-    paperShape = concaveHull(paperPoints, 0.5, 100);
+    path = pathSampler.sample(new Box(0, 0, width, height));
+    path = closePath(path);
+    path = smoothenOpenPathCatmullRom(path);
 
     p.noLoop();
   };
@@ -44,8 +49,8 @@ export const sketch = (p: p5) => {
     p.stroke(0);
     p.noFill();
 
-    drawPaper(p, paperShape, TextureType.WAVES);
-    drawPencil(p, pencilPath, { width: 2, density: 3 });
+    drawPaper(p, toPolygon(path), TextureType.GEOMETRIC_LINES);
+    // drawPencil(p, path, { width: 2, density: 5 });
   };
 
   p.windowResized = () => {
